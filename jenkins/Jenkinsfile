@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'node:16-buster-slim'
+            image 'cimg/node:16.20'
             args '-p 3000:3000'
         }
     }
@@ -26,6 +26,11 @@ pipeline {
             steps {
                 sh './jenkins/scripts/deliver.sh' 
                 sh 'pwd && cd build && ls -la'
+                sshagent(credentials: ['sshec2']) { 
+                    sh """
+                        scp -r -o StrictHostKeyChecking=no build ${env.EC2_USER}@${env.EC2_HOST}:/home/ubuntu/react-app
+                    """
+                }
                 // input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)' 
                 // sh './jenkins/scripts/kill.sh' 
             }
