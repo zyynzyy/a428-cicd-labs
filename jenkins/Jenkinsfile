@@ -1,40 +1,29 @@
-pipeline {
-    agent {
-        docker {
-            image 'cimg/node:16.20'
-            args '-p 3000:3000 -u root'
-        }
-    }
-    stages {
+node {
+    def dockerImage = docker.image('cimg/node:16.20')
+    dockerImage.pull()
+    dockerImage.inside('-p 3000:3000 -u root') {
         stage('Build') {
-            steps {
-                sh 'npm install'
-            }
-        }
-        stage('Test') {
-            steps {
-                sh './jenkins/scripts/test.sh'
-            }
-        }
-        stage('Manual Approval'){
-            steps {
-                input message: 'Apakah anda melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengakhiri)'
-                sleep 60
-            }
+            sh 'npm install'
         }
 
-        stage('Deploy') { 
-            steps {
-                sh './jenkins/scripts/deliver.sh' 
-                sh 'pwd && cd build && ls -la'
-                sshagent(credentials: ['sshec2']) { 
-                    sh """
-                        scp -r -o StrictHostKeyChecking=no build ${env.EC2_USER}@${env.EC2_HOST}:/home/ubuntu/react-app
-                    """
-                }
-                // input message: 'Sudah selesai menggunakan React App? (Klik "Proceed" untuk mengakhiri)' 
-                // sh './jenkins/scripts/kill.sh' 
+        stage('Test') {
+            sh './jenkins/scripts/test.sh'
+        }
+
+        stage('Manual Approval') {
+            input message: 'Apakah anda melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengakhiri)'
+            sleep time: 60, unit: 'SECONDS'
+        }
+
+        stage('Deploy') {
+            sh './jenkins/scripts/deliver.sh'
+            sh 'pwd && cd build && ls -la'
+            sshagent(credentials: ['sshec2']) {
+                sh """
+                    scp -r -o StrictHostKeyChecking=no build ${env.EC2_USER}@${env.EC2_HOST}:/home/ubuntu/react-app
+                """
             }
+
         }
     }
 }
