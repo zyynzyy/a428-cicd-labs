@@ -12,7 +12,7 @@ node {
 
         stage('Manual Approval') {
             input message: 'Apakah anda melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengakhiri)'
-            sleep time: 60, unit: 'SECONDS'
+        
         }
 
         stage('Deploy') {
@@ -23,7 +23,7 @@ node {
                     scp -r -o StrictHostKeyChecking=no build ${env.EC2_USER}@${env.EC2_HOST}:/home/ubuntu/react-app
                 """
             }
-
+            sleep 60
         }
     }
 }
