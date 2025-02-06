@@ -19,6 +19,7 @@ pipeline {
         stage('Manual Approval'){
             steps {
                 input message: 'Apakah anda melanjutkan ke tahap Deploy? (Klik "Proceed" untuk mengakhiri)'
+                sleep 60
             }
         }
 
